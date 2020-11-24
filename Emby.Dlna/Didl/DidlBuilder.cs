@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using Emby.Dlna.ContentDirectory;
 using Jellyfin.Data.Entities;
 using MediaBrowser.Controller.Channels;
 using MediaBrowser.Controller.Drawing;
@@ -94,29 +93,27 @@ namespace Emby.Dlna.Didl
                 ConformanceLevel = ConformanceLevel.Fragment
             };
 
-            using (StringWriter builder = new StringWriterWithEncoding(Encoding.UTF8))
+            using StringWriter builder = new UTF8StringWriter();
+            using (var writer = XmlWriter.Create(builder, settings))
             {
-                using (var writer = XmlWriter.Create(builder, settings))
-                {
-                    // writer.WriteStartDocument();
+                // writer.WriteStartDocument();
 
-                    writer.WriteStartElement(string.Empty, "DIDL-Lite", NsDidl);
+                writer.WriteStartElement(string.Empty, "DIDL-Lite", NsDidl);
 
-                    writer.WriteAttributeString("xmlns", "dc", null, NsDc);
-                    writer.WriteAttributeString("xmlns", "dlna", null, NsDlna);
-                    writer.WriteAttributeString("xmlns", "upnp", null, NsUpnp);
-                    // didl.SetAttribute("xmlns:sec", NS_SEC);
+                writer.WriteAttributeString("xmlns", "dc", null, NsDc);
+                writer.WriteAttributeString("xmlns", "dlna", null, NsDlna);
+                writer.WriteAttributeString("xmlns", "upnp", null, NsUpnp);
+                // didl.SetAttribute("xmlns:sec", NS_SEC);
 
-                    WriteXmlRootAttributes(_profile, writer);
+                WriteXmlRootAttributes(_profile, writer);
 
-                    WriteItemElement(writer, item, user, context, null, deviceId, filter, streamInfo);
+                WriteItemElement(writer, item, user, context, null, deviceId, filter, streamInfo);
 
-                    writer.WriteFullEndElement();
-                    // writer.WriteEndDocument();
-                }
-
-                return builder.ToString();
+                writer.WriteFullEndElement();
+                // writer.WriteEndDocument();
             }
+
+            return builder.ToString();
         }
 
         public static void WriteXmlRootAttributes(DeviceProfile profile, XmlWriter writer)

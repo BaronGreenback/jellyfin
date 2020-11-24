@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -17,8 +16,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Emby.Dlna;
-using Emby.Dlna.Main;
-using Emby.Dlna.Ssdp;
 using Emby.Drawing;
 using Emby.Notifications;
 using Emby.Photos;
@@ -35,7 +32,6 @@ using Emby.Server.Implementations.IO;
 using Emby.Server.Implementations.Library;
 using Emby.Server.Implementations.LiveTv;
 using Emby.Server.Implementations.Localization;
-using Emby.Server.Implementations.Net;
 using Emby.Server.Implementations.Playlists;
 using Emby.Server.Implementations.Plugins;
 using Emby.Server.Implementations.QuickConnect;
@@ -548,8 +544,6 @@ namespace Emby.Server.Implementations
 
             ServiceCollection.AddSingleton<ICryptoProvider, CryptographyProvider>();
 
-            ServiceCollection.AddSingleton<ISocketFactory, SocketFactory>();
-
             ServiceCollection.AddSingleton<IInstallationManager, InstallationManager>();
 
             ServiceCollection.AddSingleton<IZipClient, ZipClient>();
@@ -625,8 +619,6 @@ namespace Emby.Server.Implementations
             ServiceCollection.AddSingleton<IUserViewManager, UserViewManager>();
 
             ServiceCollection.AddSingleton<INotificationManager, NotificationManager>();
-
-            ServiceCollection.AddSingleton<IDeviceDiscovery, DeviceDiscovery>();
 
             ServiceCollection.AddSingleton<IChapterManager, ChapterManager>();
 
@@ -1150,9 +1142,6 @@ namespace Emby.Server.Implementations
 
             // MediaEncoding
             yield return typeof(MediaBrowser.MediaEncoding.Encoder.MediaEncoder).Assembly;
-
-            // Dlna
-            yield return typeof(DlnaEntryPoint).Assembly;
 
             // Local metadata
             yield return typeof(BoxSetXmlSaver).Assembly;
