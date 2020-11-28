@@ -32,10 +32,11 @@
 
   <PropertyGroup>
     <Authors>Jellyfin Contributors</Authors>
-    <PackageId>Jellyfin.Naming</PackageId>
+    <PackageId>Emby.Naming</PackageId>
     <VersionPrefix>10.7.0</VersionPrefix>
     <RepositoryUrl>https://github.com/jellyfin/jellyfin</RepositoryUrl>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

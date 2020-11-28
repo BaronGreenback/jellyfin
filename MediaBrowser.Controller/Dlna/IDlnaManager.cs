@@ -1,6 +1,7 @@
 #pragma warning disable CS1591
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Model.Dlna;
 using Microsoft.AspNetCore.Http;
@@ -75,5 +76,11 @@ namespace MediaBrowser.Controller.Dlna
         /// <param name="filename">The filename.</param>
         /// <returns>DlnaIconResponse.</returns>
         ImageStream GetIcon(string filename);
+
+        /// <summary>
+        /// Extracts all profiles, and loads them up.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+        Task InitProfilesAsync();
     }
 }

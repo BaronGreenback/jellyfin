@@ -7,7 +7,7 @@
 
   <PropertyGroup>
     <Authors>Jellyfin Contributors</Authors>
-    <PackageId>Jellyfin.Model</PackageId>
+    <PackageId>MediaBrowser.Model</PackageId>
     <VersionPrefix>10.7.0</VersionPrefix>
     <RepositoryUrl>https://github.com/jellyfin/jellyfin</RepositoryUrl>
     <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
@@ -24,6 +24,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Stability)'=='Unstable'">
