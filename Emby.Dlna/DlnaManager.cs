@@ -412,10 +412,6 @@ namespace Emby.Dlna
                 });
         }
 
-        /// <summary>
-        /// The ExtractSystemProfilesAsync.
-        /// </summary>
-        /// <returns>The <see cref="Task"/>.</returns>
         private async Task ExtractSystemProfilesAsync()
         {
             var namespaceName = GetType().Namespace + ".Profiles.Xml.";
