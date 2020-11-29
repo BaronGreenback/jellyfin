@@ -62,6 +62,11 @@ namespace MediaBrowser.Model.Dlna
         /// <returns><c>True</c> if they match.</returns>
         public bool IsMatch(DeviceIdentification profileInfo)
         {
+            if (profileInfo == null)
+            {
+                return false;
+            }
+
             if (!string.IsNullOrEmpty(profileInfo.FriendlyName))
             {
                 if (FriendlyName == null || !IsRegexOrSubstringMatch(FriendlyName, profileInfo.FriendlyName))
@@ -148,7 +153,7 @@ namespace MediaBrowser.Model.Dlna
             return builder.ToString();
         }
 
-        private bool IsRegexOrSubstringMatch(string input, string pattern)
+        private static bool IsRegexOrSubstringMatch(string input, string pattern)
         {
             try
             {
@@ -161,6 +166,5 @@ namespace MediaBrowser.Model.Dlna
                 return false;
             }
         }
-
     }
 }

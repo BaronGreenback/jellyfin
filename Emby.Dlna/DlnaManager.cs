@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Emby.Dlna.Profiles;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Common.Extensions;
-using MediaBrowser.Controller;
 using MediaBrowser.Controller.Dlna;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Dlna;
@@ -32,7 +31,6 @@ namespace Emby.Dlna
         private readonly IFileSystem _fileSystem;
         private readonly ILogger<DlnaManager> _logger;
         private readonly IJsonSerializer _jsonSerializer;
-        private readonly IServerApplicationHost _appHost;
         private readonly Dictionary<string, Tuple<InternalProfileInfo, DeviceProfile>> _profiles = new Dictionary<string, Tuple<InternalProfileInfo, DeviceProfile>>(StringComparer.Ordinal);
 
         /// <summary>
@@ -43,21 +41,18 @@ namespace Emby.Dlna
         /// <param name="appPaths">The appPaths<see cref="IApplicationPaths"/>.</param>
         /// <param name="loggerFactory">The loggerFactory<see cref="ILoggerFactory"/>.</param>
         /// <param name="jsonSerializer">The jsonSerializer<see cref="IJsonSerializer"/>.</param>
-        /// <param name="appHost">The appHost<see cref="IServerApplicationHost"/>.</param>
         public DlnaManager(
             IXmlSerializer xmlSerializer,
             IFileSystem fileSystem,
             IApplicationPaths appPaths,
             ILoggerFactory loggerFactory,
-            IJsonSerializer jsonSerializer,
-            IServerApplicationHost appHost)
+            IJsonSerializer jsonSerializer)
         {
             _xmlSerializer = xmlSerializer;
             _fileSystem = fileSystem;
             _appPaths = appPaths;
             _logger = loggerFactory.CreateLogger<DlnaManager>();
             _jsonSerializer = jsonSerializer;
-            _appHost = appHost;
         }
 
         /// <summary>
@@ -81,7 +76,9 @@ namespace Emby.Dlna
                 await ExtractSystemProfilesAsync().ConfigureAwait(false);
                 LoadProfiles();
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
             {
                 _logger.LogError(ex, "Error extracting DLNA profiles.");
             }
@@ -181,7 +178,7 @@ namespace Emby.Dlna
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
+            // Do nothing.
         }
 
         /// <summary>
@@ -211,6 +208,11 @@ namespace Emby.Dlna
         /// <param name="profile">The <see cref="DeviceProfile"/>.</param>
         public void CreateProfile(DeviceProfile profile)
         {
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+
             profile = ReserializeProfile(profile);
 
             if (string.IsNullOrEmpty(profile.Name))
@@ -230,6 +232,11 @@ namespace Emby.Dlna
         /// <param name="profile">The <see cref="DeviceProfile"/>.</param>
         public void UpdateProfile(DeviceProfile profile)
         {
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+
             profile = ReserializeProfile(profile);
 
             if (string.IsNullOrEmpty(profile.Id))
@@ -256,6 +263,39 @@ namespace Emby.Dlna
             SaveProfile(profile, path, DeviceProfileType.User);
         }
 
+        private static bool IsMatch(IHeaderDictionary headers, DeviceIdentification profileInfo)
+        {
+            return profileInfo.Headers.Any(i => IsMatch(headers, i));
+        }
+
+        private static bool IsMatch(IHeaderDictionary headers, HttpHeaderInfo header)
+        {
+            // Handle invalid user setup
+            if (string.IsNullOrEmpty(header.Name))
+            {
+                return false;
+            }
+
+            if (!headers.TryGetValue(header.Name, out StringValues value))
+            {
+                return false;
+            }
+
+            switch (header.Match)
+            {
+                case HeaderMatchType.Equals:
+                    return string.Equals(value, header.Value, StringComparison.OrdinalIgnoreCase);
+                case HeaderMatchType.Substring:
+                    var isMatch = value.ToString().IndexOf(header.Value, StringComparison.OrdinalIgnoreCase) != -1;
+                    // _logger.LogDebug("IsMatch-Substring value: {0} testValue: {1} isMatch: {2}", value, header.Value, isMatch);
+                    return isMatch;
+                case HeaderMatchType.Regex:
+                    return Regex.IsMatch(value, header.Value, RegexOptions.IgnoreCase);
+                default:
+                    throw new ArgumentException("Unrecognized HeaderMatchType");
+            }
+        }
+
         /// <summary>
         /// Saves a Profile.
         /// </summary>
@@ -264,45 +304,17 @@ namespace Emby.Dlna
         /// <param name="type">The profile <see cref="DeviceProfileType"/>.</param>
         private void SaveProfile(DeviceProfile profile, string path, DeviceProfileType type)
         {
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+
             lock (_profiles)
             {
                 _profiles[path] = new Tuple<InternalProfileInfo, DeviceProfile>(GetInternalProfileInfo(_fileSystem.GetFileInfo(path), type), profile);
             }
 
             SerializeToXml(profile, path);
-        }
-
-        private bool IsMatch(IHeaderDictionary headers, DeviceIdentification profileInfo)
-        {
-            return profileInfo.Headers.Any(i => IsMatch(headers, i));
-        }
-
-        private bool IsMatch(IHeaderDictionary headers, HttpHeaderInfo header)
-        {
-            // Handle invalid user setup
-            if (string.IsNullOrEmpty(header.Name))
-            {
-                return false;
-            }
-
-            if (headers.TryGetValue(header.Name, out StringValues value))
-            {
-                switch (header.Match)
-                {
-                    case HeaderMatchType.Equals:
-                        return string.Equals(value, header.Value, StringComparison.OrdinalIgnoreCase);
-                    case HeaderMatchType.Substring:
-                        var isMatch = value.ToString().IndexOf(header.Value, StringComparison.OrdinalIgnoreCase) != -1;
-                        // _logger.LogDebug("IsMatch-Substring value: {0} testValue: {1} isMatch: {2}", value, header.Value, isMatch);
-                        return isMatch;
-                    case HeaderMatchType.Regex:
-                        return Regex.IsMatch(value, header.Value, RegexOptions.IgnoreCase);
-                    default:
-                        throw new ArgumentException("Unrecognized HeaderMatchType");
-                }
-            }
-
-            return false;
         }
 
         private IEnumerable<DeviceProfile?> GetProfiles(string path, DeviceProfileType type)
@@ -330,16 +342,14 @@ namespace Emby.Dlna
             {
                 if (_profiles.TryGetValue(path, out Tuple<InternalProfileInfo, DeviceProfile>? profileTuple))
                 {
-                    return profileTuple.Item2;
+                    return profileTuple!.Item2;
                 }
 
                 try
                 {
-                    DeviceProfile profile;
-
                     var tempProfile = (DeviceProfile)_xmlSerializer.DeserializeFromFile(typeof(DeviceProfile), path);
 
-                    profile = ReserializeProfile(tempProfile);
+                    DeviceProfile profile = ReserializeProfile(tempProfile);
 
                     profile.Id = path.ToLowerInvariant().GetMD5().ToString("N", CultureInfo.InvariantCulture);
 
@@ -347,7 +357,9 @@ namespace Emby.Dlna
 
                     return profile;
                 }
+#pragma warning disable CA1031 // Do not catch general exception types
                 catch (Exception ex)
+#pragma warning restore CA1031 // Do not catch general exception types
                 {
                     _logger.LogError(ex, "Error parsing profile file: {Path}", path);
 
@@ -405,9 +417,9 @@ namespace Emby.Dlna
 
                 var path = Path.Join(
                     systemProfilesPath,
-                    Path.GetFileName(name.AsSpan()).Slice(namespaceName.Length));
+                    Path.GetFileName(name.AsSpan())[namespaceName.Length..]);
 
-                using var stream = _assembly.GetManifestResourceStream(name);
+                await using var stream = _assembly.GetManifestResourceStream(name);
                 if (stream == null)
                 {
                     throw new ResourceNotFoundException($"Resource {name} missing from manifest:");
@@ -415,13 +427,15 @@ namespace Emby.Dlna
 
                 var fileInfo = _fileSystem.GetFileInfo(path);
 
-                if (!fileInfo.Exists || fileInfo.Length != stream.Length)
+                if (fileInfo.Exists && fileInfo.Length == stream.Length)
                 {
-                    Directory.CreateDirectory(systemProfilesPath);
-
-                    using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
-                    await stream.CopyToAsync(fileStream).ConfigureAwait(false);
+                    continue;
                 }
+
+                Directory.CreateDirectory(systemProfilesPath);
+
+                await using var fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+                await stream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
 
             // Not necessary, but just to make it easy to find
