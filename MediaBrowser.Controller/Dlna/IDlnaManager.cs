@@ -1,7 +1,6 @@
 #pragma warning disable CS1591
 
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using MediaBrowser.Controller.Drawing;
 using MediaBrowser.Model.Dlna;
 using Microsoft.AspNetCore.Http;
@@ -60,27 +59,5 @@ namespace MediaBrowser.Controller.Dlna
         /// <param name="deviceInfo">The device information.</param>
         /// <returns>DeviceProfile.</returns>
         DeviceProfile GetProfile(DeviceIdentification deviceInfo);
-
-        /// <summary>
-        /// Gets the server description XML.
-        /// </summary>
-        /// <param name="headers">The headers.</param>
-        /// <param name="serverUuId">The server uu identifier.</param>
-        /// <param name="serverAddress">The server address.</param>
-        /// <returns>System.String.</returns>
-        string GetServerDescriptionXml(IHeaderDictionary headers, string serverUuId, string serverAddress);
-
-        /// <summary>
-        /// Gets the icon.
-        /// </summary>
-        /// <param name="filename">The filename.</param>
-        /// <returns>DlnaIconResponse.</returns>
-        ImageStream GetIcon(string filename);
-
-        /// <summary>
-        /// Extracts all profiles, and loads them up.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        Task InitProfilesAsync();
     }
 }
