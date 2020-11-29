@@ -263,6 +263,20 @@ namespace Emby.Dlna
             SaveProfile(profile, path, DeviceProfileType.User);
         }
 
+        /// <inheritdoc/>
+        public IEnumerable<DeviceProfile> GetProfiles()
+        {
+            lock (_profiles)
+            {
+                var list = _profiles.Values.ToList();
+                return list
+                    .OrderBy(i => i.Item1.Info.Type == DeviceProfileType.User ? 0 : 1)
+                    .ThenBy(i => i.Item1.Info.Name)
+                    .Select(i => i.Item2)
+                    .ToList();
+            }
+        }
+
         private static bool IsMatch(IHeaderDictionary headers, DeviceIdentification profileInfo)
         {
             return profileInfo.Headers.Any(i => IsMatch(headers, i));
@@ -463,19 +477,6 @@ namespace Emby.Dlna
             var json = _jsonSerializer.SerializeToString(profile);
 
             return _jsonSerializer.DeserializeFromString<DeviceProfile>(json);
-        }
-
-        private IEnumerable<DeviceProfile> GetProfiles()
-        {
-            lock (_profiles)
-            {
-                var list = _profiles.Values.ToList();
-                return list
-                    .OrderBy(i => i.Item1.Info.Type == DeviceProfileType.User ? 0 : 1)
-                    .ThenBy(i => i.Item1.Info.Name)
-                    .Select(i => i.Item2)
-                    .ToList();
-            }
         }
 
         private void LoadProfiles()
