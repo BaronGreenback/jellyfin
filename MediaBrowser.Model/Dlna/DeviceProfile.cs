@@ -229,21 +229,7 @@ namespace MediaBrowser.Model.Dlna
         /// </summary>
         public SubtitleProfile[] SubtitleProfiles { get; set; }
 
-        /// <summary>
-        /// Gets the model profile condition.
-        /// </summary>
-        /// <param name="c">The c<see cref="ProfileCondition"/>.</param>
-        /// <returns>The <see cref="ProfileCondition"/>.</returns>
-        private static ProfileCondition GetModelProfileCondition(ProfileCondition c)
-        {
-            return new ProfileCondition
-            {
-                Condition = c.Condition,
-                IsRequired = c.IsRequired,
-                Property = c.Property,
-                Value = c.Value
-            };
-        }
+
 
         /// <summary>
         /// Gets the profile's supported media types.
@@ -375,6 +361,22 @@ namespace MediaBrowser.Model.Dlna
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Gets the model profile condition.
+        /// </summary>
+        /// <param name="c">The <see cref="ProfileCondition"/>.</param>
+        /// <returns>The <see cref="ProfileCondition"/>.</returns>
+        private ProfileCondition GetModelProfileCondition(ProfileCondition c)
+        {
+            return new ProfileCondition
+            {
+                Condition = c.Condition,
+                IsRequired = c.IsRequired,
+                Property = c.Property,
+                Value = c.Value
+            };
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -507,6 +508,32 @@ namespace MediaBrowser.Common.Udp
             catch (SocketException ex)
             {
                 client.Logger?.LogDebug(ex, "Error sending to {0}:{1}", intf, mcast);
+            }
+        }
+
+        /// <summary>
+        /// Disposes an udp client.
+        /// </summary>
+        /// <param name="client">A <see cref="List{UdpProcess}"/>.</param>
+        public static void DisposeClient(UdpProcess? client)
+        {
+            client?.Dispose();
+        }
+
+        /// <summary>
+        /// Disposes of multiple udp clients.
+        /// </summary>
+        /// <param name="clients">A <see cref="List{UdpProcess}"/>.</param>
+        public static void DisposeClients(List<UdpProcess>? clients)
+        {
+            if (clients == null)
+            {
+                return;
+            }
+
+            foreach (var client in clients)
+            {
+                DisposeClient(client);
             }
         }
 

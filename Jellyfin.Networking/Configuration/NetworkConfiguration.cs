@@ -168,7 +168,11 @@ namespace Jellyfin.Networking.Configuration
         public string HDHomerunPortRange { get; set; } = string.Empty;
 
         /// <summary>
-        /// Gets or sets the PublishedServerUriBySubnet
+        /// Gets or sets a value indicating whether IPv6 is enabled in HDHomerun communications.
+        /// </summary>
+        public bool HDHomeRunIP6Enabled { get; set; } = false;
+
+        /// <summary>
         /// Gets or sets PublishedServerUri to advertise for specific subnets.
         /// </summary>
         public string[] PublishedServerUriBySubnet { get; set; } = Array.Empty<string>();
@@ -184,7 +188,7 @@ namespace Jellyfin.Networking.Configuration
         public bool AutoDiscovery { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the filter for remote IP connectivity. Used in conjuntion with <seealso cref="IsRemoteIPFilterBlacklist"/>.
+        /// Gets or sets the filter for remote IP connectivity. Used in conjunction with <seealso cref="IsRemoteIPFilterBlacklist"/>.
         /// </summary>
         public string[] RemoteIPFilter { get; set; } = Array.Empty<string>();
 

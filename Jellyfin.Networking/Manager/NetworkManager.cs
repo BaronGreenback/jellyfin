@@ -712,7 +712,7 @@ namespace Jellyfin.Networking.Manager
             bool partial = token[^1] == '*';
             if (partial)
             {
-                token = token[0..^1];
+                token = token[..^1];
             }
 
             foreach ((string interfc, int interfcIndex) in _interfaceNames)
@@ -1122,15 +1122,17 @@ namespace Jellyfin.Networking.Manager
                         _interfaceAddresses.AddItem(a);
                     }
 
-                    if (_interfaceAddresses.Count == 0)
+                    if (_interfaceAddresses.Count != 0)
                     {
-                        _logger.LogWarning("No interfaces information available. Using loopback.");
-                        // Last ditch attempt - use loopback address.
-                        _interfaceAddresses.AddItem(IPNetAddress.IP4Loopback);
-                        if (IsIP6Enabled)
-                        {
-                            _interfaceAddresses.AddItem(IPNetAddress.IP6Loopback);
-                        }
+                        return;
+                    }
+
+                    _logger.LogWarning("No interfaces information available. Using loopback.");
+                    // Last ditch attempt - use loopback address.
+                    _interfaceAddresses.AddItem(IPNetAddress.IP4Loopback);
+                    if (IsIP6Enabled)
+                    {
+                        _interfaceAddresses.AddItem(IPNetAddress.IP6Loopback);
                     }
                 }
                 catch (NetworkInformationException ex)
@@ -1170,12 +1172,14 @@ namespace Jellyfin.Networking.Manager
                     break;
                 }
 
-                if (key.Contains(source))
+                if (!key.Contains(source))
                 {
-                    // Match ip address.
-                    bindPreference = value;
-                    break;
+                    continue;
                 }
+
+                // Match ip address.
+                bindPreference = value;
+                break;
             }
 
             if (string.IsNullOrEmpty(bindPreference))
@@ -1190,11 +1194,13 @@ namespace Jellyfin.Networking.Manager
                 return true;
             }
 
-            if (int.TryParse(parts[1], out int p))
+            if (!int.TryParse(parts[1], out int p))
             {
-                bindPreference = parts[0];
-                port = p;
+                return true;
             }
+
+            bindPreference = parts[0];
+            port = p;
 
             return true;
         }
