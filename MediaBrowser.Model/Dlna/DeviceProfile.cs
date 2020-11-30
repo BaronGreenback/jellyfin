@@ -230,9 +230,25 @@ namespace MediaBrowser.Model.Dlna
         public SubtitleProfile[] SubtitleProfiles { get; set; }
 
         /// <summary>
-        /// The GetSupportedMediaTypes.
+        /// Gets the model profile condition.
         /// </summary>
-        /// <returns>The .</returns>
+        /// <param name="c">The c<see cref="ProfileCondition"/>.</param>
+        /// <returns>The <see cref="ProfileCondition"/>.</returns>
+        private static ProfileCondition GetModelProfileCondition(ProfileCondition c)
+        {
+            return new ProfileCondition
+            {
+                Condition = c.Condition,
+                IsRequired = c.IsRequired,
+                Property = c.Property,
+                Value = c.Value
+            };
+        }
+
+        /// <summary>
+        /// Gets the profile's supported media types.
+        /// </summary>
+        /// <returns>String array of support profile types.</returns>
         public string[] GetSupportedMediaTypes()
         {
             return ContainerProfile.SplitValue(SupportedMediaTypes);
@@ -362,22 +378,6 @@ namespace MediaBrowser.Model.Dlna
         }
 
         /// <summary>
-        /// Gets the model profile condition.
-        /// </summary>
-        /// <param name="c">The c<see cref="ProfileCondition"/>.</param>
-        /// <returns>The <see cref="ProfileCondition"/>.</returns>
-        private ProfileCondition GetModelProfileCondition(ProfileCondition c)
-        {
-            return new ProfileCondition
-            {
-                Condition = c.Condition,
-                IsRequired = c.IsRequired,
-                Property = c.Property,
-                Value = c.Value
-            };
-        }
-
-        /// <summary>
         /// Gets the image media profile.
         /// </summary>
         /// <param name="container">The container.</param>
@@ -433,7 +433,7 @@ namespace MediaBrowser.Model.Dlna
         /// <param name="videoLevel">The video level.</param>
         /// <param name="videoFramerate">The video framerate.</param>
         /// <param name="packetLength">The packet length.</param>
-        /// <param name="timestamp">The timestamp<see cref="TransportStreamTimestamp"/>.</param>
+        /// <param name="timestamp">The <see cref="TransportStreamTimestamp"/>.</param>
         /// <param name="isAnamorphic">True if anamorphic.</param>
         /// <param name="isInterlaced">True if interlaced.</param>
         /// <param name="refFrames">The ref frames.</param>

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Emby.Dlna.Profiles;
@@ -106,7 +107,7 @@ namespace Emby.Dlna
             }
 
             var profile = GetProfiles()
-                .FirstOrDefault(i => i.Identification != null && deviceInfo.IsMatch(i.Identification));
+                .FirstOrDefault(i => i.Identification != null && IsMatch(deviceInfo, i.Identification));
 
             if (profile != null)
             {
@@ -114,7 +115,7 @@ namespace Emby.Dlna
             }
             else
             {
-                _logger.LogInformation(deviceInfo.GetDetails());
+                _logger.LogInformation(LogUnmatchedProfile(deviceInfo));
             }
 
             return profile;
@@ -310,6 +311,105 @@ namespace Emby.Dlna
             }
         }
 
+        private static string LogUnmatchedProfile(DeviceIdentification profile)
+        {
+            var builder = new StringBuilder();
+
+            builder.AppendLine("No matching device profile found. The default will need to be used.");
+            builder.Append("FriendlyName:").AppendLine(profile.FriendlyName);
+            builder.Append("Manufacturer:").AppendLine(profile.Manufacturer);
+            builder.Append("ManufacturerUrl:").AppendLine(profile.ManufacturerUrl);
+            builder.Append("ModelDescription:").AppendLine(profile.ModelDescription);
+            builder.Append("ModelName:").AppendLine(profile.ModelName);
+            builder.Append("ModelNumber:").AppendLine(profile.ModelNumber);
+            builder.Append("ModelUrl:").AppendLine(profile.ModelUrl);
+            builder.Append("SerialNumber:").AppendLine(profile.SerialNumber);
+
+            return builder.ToString();
+        }
+
+        private bool IsMatch(DeviceIdentification deviceInfo, DeviceIdentification profileInfo)
+        {
+            if (!string.IsNullOrEmpty(profileInfo.FriendlyName))
+            {
+                if (deviceInfo.FriendlyName == null || !IsRegexOrSubstringMatch(deviceInfo.FriendlyName, profileInfo.FriendlyName))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.Manufacturer))
+            {
+                if (deviceInfo.Manufacturer == null || !IsRegexOrSubstringMatch(deviceInfo.Manufacturer, profileInfo.Manufacturer))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.ManufacturerUrl))
+            {
+                if (deviceInfo.ManufacturerUrl == null || !IsRegexOrSubstringMatch(deviceInfo.ManufacturerUrl, profileInfo.ManufacturerUrl))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.ModelDescription))
+            {
+                if (deviceInfo.ModelDescription == null || !IsRegexOrSubstringMatch(deviceInfo.ModelDescription, profileInfo.ModelDescription))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.ModelName))
+            {
+                if (deviceInfo.ModelName == null || !IsRegexOrSubstringMatch(deviceInfo.ModelName, profileInfo.ModelName))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.ModelNumber))
+            {
+                if (deviceInfo.ModelNumber == null || !IsRegexOrSubstringMatch(deviceInfo.ModelNumber, profileInfo.ModelNumber))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.ModelUrl))
+            {
+                if (deviceInfo.ModelUrl == null || !IsRegexOrSubstringMatch(deviceInfo.ModelUrl, profileInfo.ModelUrl))
+                {
+                    return false;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(profileInfo.SerialNumber))
+            {
+                if (deviceInfo.SerialNumber == null || !IsRegexOrSubstringMatch(deviceInfo.SerialNumber, profileInfo.SerialNumber))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool IsRegexOrSubstringMatch(string input, string pattern)
+        {
+            try
+            {
+                return input.Contains(pattern, StringComparison.OrdinalIgnoreCase) || Regex.IsMatch(input, pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogError(ex, "Error evaluating regex pattern {Pattern}", pattern);
+                return false;
+            }
+        }
+
         /// <summary>
         /// Saves a Profile.
         /// </summary>
@@ -394,12 +494,6 @@ namespace Emby.Dlna
             }
         }
 
-        /// <summary>
-        /// The GetInternalProfileInfo.
-        /// </summary>
-        /// <param name="file">The file<see cref="FileSystemMetadata"/>.</param>
-        /// <param name="type">The type<see cref="DeviceProfileType"/>.</param>
-        /// <returns>The <see cref="InternalProfileInfo"/>.</returns>
         private InternalProfileInfo GetInternalProfileInfo(FileSystemMetadata file, DeviceProfileType type)
         {
             return new InternalProfileInfo(
