@@ -17,16 +17,18 @@ namespace Jellyfin.Networking.AutoDiscovery
     /// <summary>
     /// Defines the <see cref="ZeroConf" />.
     /// </summary>
-    public class ZeroConf
+    public class ZeroConf : IDisposable
     {
         /// <summary>
         /// The UDP port to use for zero configuration.
         /// </summary>
         private const int PortNumber = 7359;
         private readonly IServerApplicationHost _appHost;
+        private readonly IConfigurationManager _configuration;
         private readonly INetworkManager _networkManager;
         private readonly ILogger _logger;
         private List<UdpProcess>? _udpProcess;
+        private bool _disposedValue;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ZeroConf"/> class.
@@ -43,10 +45,39 @@ namespace Jellyfin.Networking.AutoDiscovery
         {
             _logger = logger;
             _appHost = appHost;
-            IConfigurationManager configuration = configurationManager;
+            _configuration = configurationManager;
             _networkManager = networkManager;
-            configuration.NamedConfigurationUpdated += ConfigurationUpdated;
-            UpdateSettings(configuration.GetNetworkConfiguration());
+            _configuration.NamedConfigurationUpdated += ConfigurationUpdated;
+            UpdateSettings(_configuration.GetNetworkConfiguration());
+        }
+
+        /// <summary>
+        /// Releases managed resources.
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>True</c> if disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _configuration.NamedConfigurationUpdated -= ConfigurationUpdated;
+                    _logger.LogWarning("Shutting down auto discovery...");
+                    UdpHelper.DisposeClients(_udpProcess);
+                }
+
+                _disposedValue = true;
+            }
         }
 
         /// <summary>
