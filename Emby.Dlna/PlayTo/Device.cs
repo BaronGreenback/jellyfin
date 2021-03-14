@@ -319,7 +319,7 @@ namespace Emby.Dlna.PlayTo
         {
             var avCommands = await GetAVProtocolAsync(cancellationToken).ConfigureAwait(false);
 
-            url = url.Replace("&", "&amp;", StringComparison.Ordinal);
+            // url = url.Replace("&", "&amp;", StringComparison.Ordinal);
 
             _logger.LogDebug("{0} - SetAvTransport Uri: {1} DlnaHeaders: {2}", Properties.Name, url, header);
 
@@ -332,7 +332,7 @@ namespace Emby.Dlna.PlayTo
             var dictionary = new Dictionary<string, string>
             {
                 { "CurrentURI", url },
-                { "CurrentURIMetaData", CreateDidlMeta(metaData) }
+                { "CurrentURIMetaData", metaData }
             };
 
             var service = GetAvTransportService();
