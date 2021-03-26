@@ -401,7 +401,7 @@ namespace Emby.Dlna.Didl
                     mimeType,
                     contentFeatures));
 
-            writer.WriteString(url);
+            writer.WriteString(EncodeUrl(url));
 
             writer.WriteFullEndElement();
         }
@@ -618,9 +618,53 @@ namespace Emby.Dlna.Didl
                     mimeType,
                     contentFeatures));
 
-            writer.WriteString(url);
+            writer.WriteString(EncodeUrl(url));
 
             writer.WriteFullEndElement();
+        }
+
+        /// <summary>
+        /// Encodes the query string part of a url.
+        /// </summary>
+        /// <param name="url">Url to encode.</param>
+        /// <returns>The encoded url or an empty string if <paramref name="url"/> was null."/>.</returns>
+        public static string EncodeUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return string.Empty;
+            }
+
+            // add a little bit more memory for the encoding.
+            var sb = new StringBuilder(url.Length + 30);
+            for (int i = 0; i < url.Length; i++)
+            {
+                char c = url[i];
+                switch (c)
+                {
+                    case '<':
+                        sb.Append("%74");
+                        break;
+                    case '>':
+                        sb.Append("%76");
+                        break;
+                    case '"':
+                        sb.Append("%42");
+                        break;
+                    case '\'':
+                        sb.Append("%47");
+                        break;
+                    case '&':
+                        sb.Append("%46");
+                        break;
+                    default:
+                        sb.Append(c);
+                        break;
+                }
+            }
+
+            // Cannot use normal escaping here as the address has to be both uri valid and html valid.
+            return sb.ToString();
         }
 
         public static bool IsIdRoot(string id)

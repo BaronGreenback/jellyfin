@@ -7,6 +7,8 @@ using System.Linq;
 using System.Security;
 using System.Text;
 using Emby.Dlna.Common;
+using Emby.Dlna.Didl;
+using MediaBrowser.Controller;
 using MediaBrowser.Model.Dlna;
 
 namespace Emby.Dlna.Server
@@ -18,10 +20,10 @@ namespace Emby.Dlna.Server
         private readonly CultureInfo _usCulture = new CultureInfo("en-US");
         private readonly string _serverUdn;
         private readonly string _serverAddress;
-        private readonly string _serverName;
         private readonly string _serverId;
+        private readonly IServerApplicationHost _appHost;
 
-        public DescriptionXmlBuilder(DeviceProfile profile, string serverUdn, string serverAddress, string serverName, string serverId)
+        public DescriptionXmlBuilder(DeviceProfile profile, string serverUdn, IServerApplicationHost appHost, string serverAddress, string serverId)
         {
             if (string.IsNullOrEmpty(serverUdn))
             {
@@ -36,8 +38,8 @@ namespace Emby.Dlna.Server
             _profile = profile;
             _serverUdn = serverUdn;
             _serverAddress = serverAddress;
-            _serverName = serverName;
             _serverId = serverId;
+            _appHost = appHost;
         }
 
         public string GetXml()
@@ -88,7 +90,7 @@ namespace Emby.Dlna.Server
             AppendIconList(builder);
 
             builder.Append("<presentationURL>")
-                .Append(SecurityElement.Escape(_serverAddress))
+                .Append(DidlBuilder.EncodeUrl(_serverAddress))
                 .Append("/web/index.html</presentationURL>");
 
             AppendServiceList(builder);
@@ -106,42 +108,25 @@ namespace Emby.Dlna.Server
 
             builder.Append("<friendlyName>")
                 .Append(SecurityElement.Escape(GetFriendlyName()))
-                .Append("</friendlyName>");
-            builder.Append("<manufacturer>")
-                .Append(SecurityElement.Escape(_profile.Manufacturer ?? string.Empty))
-                .Append("</manufacturer>");
-            builder.Append("<manufacturerURL>")
-                .Append(SecurityElement.Escape(_profile.ManufacturerUrl ?? string.Empty))
-                .Append("</manufacturerURL>");
-
-            builder.Append("<modelDescription>")
-                .Append(SecurityElement.Escape(_profile.ModelDescription ?? string.Empty))
-                .Append("</modelDescription>");
-            builder.Append("<modelName>")
-                .Append(SecurityElement.Escape(_profile.ModelName ?? string.Empty))
-                .Append("</modelName>");
-
-            builder.Append("<modelNumber>")
-                .Append(SecurityElement.Escape(_profile.ModelNumber ?? string.Empty))
-                .Append("</modelNumber>");
-            builder.Append("<modelURL>")
-                .Append(SecurityElement.Escape(_profile.ModelUrl ?? string.Empty))
-                .Append("</modelURL>");
+                .Append(@"</friendlyName><manufacturer>Jellyfin</manufacturer>
+<manufacturerURL>https://github.com/jellyfin/jellyfin</manufacturerURL>
+<modelDescription>UPnP/AV 1.0 Compliant Media Server</modelDescription>
+<modelName>Jellyfin Server</modelName>
+<modelURL>https://github.com/jellyfin/jellyfin</modelURL>
+<modelNumber>")
+                .Append(_appHost.ApplicationVersionString)
+                .Append("</modelNumber><serialNumber>");
 
             if (string.IsNullOrEmpty(_profile.SerialNumber))
             {
-                builder.Append("<serialNumber>")
-                    .Append(SecurityElement.Escape(_serverId))
-                    .Append("</serialNumber>");
+                builder.Append(SecurityElement.Escape(_serverId));
             }
             else
             {
-                builder.Append("<serialNumber>")
-                    .Append(SecurityElement.Escape(_profile.SerialNumber))
-                    .Append("</serialNumber>");
+                builder.Append(SecurityElement.Escape(_profile.SerialNumber));
             }
 
-            builder.Append("<UPC/>");
+            builder.Append("</serialNumber><UPC/>");
 
             builder.Append("<UDN>uuid:")
                 .Append(SecurityElement.Escape(_serverUdn))
@@ -159,12 +144,12 @@ namespace Emby.Dlna.Server
         {
             if (string.IsNullOrEmpty(_profile.FriendlyName))
             {
-                return "Jellyfin - " + _serverName;
+                return "Jellyfin - " + _appHost.FriendlyName;
             }
 
             var characterList = new List<char>();
 
-            foreach (var c in _serverName)
+            foreach (var c in _appHost.FriendlyName)
             {
                 if (char.IsLetterOrDigit(c) || c == '-')
                 {
@@ -190,16 +175,16 @@ namespace Emby.Dlna.Server
                 builder.Append("<icon>");
 
                 builder.Append("<mimetype>")
-                    .Append(SecurityElement.Escape(icon.MimeType ?? string.Empty))
+                    .Append(icon.MimeType)
                     .Append("</mimetype>");
                 builder.Append("<width>")
-                    .Append(SecurityElement.Escape(icon.Width.ToString(_usCulture)))
+                    .Append(icon.Width.ToString(_usCulture))
                     .Append("</width>");
                 builder.Append("<height>")
-                    .Append(SecurityElement.Escape(icon.Height.ToString(_usCulture)))
+                    .Append(icon.Height.ToString(_usCulture))
                     .Append("</height>");
                 builder.Append("<depth>")
-                    .Append(SecurityElement.Escape(icon.Depth ?? string.Empty))
+                    .Append(icon.Depth ?? string.Empty)
                     .Append("</depth>");
                 builder.Append("<url>")
                     .Append(BuildUrl(icon.Url))
@@ -220,10 +205,10 @@ namespace Emby.Dlna.Server
                 builder.Append("<service>");
 
                 builder.Append("<serviceType>")
-                    .Append(SecurityElement.Escape(service.ServiceType ?? string.Empty))
+                    .Append(SecurityElement.Escape(service.ServiceType))
                     .Append("</serviceType>");
                 builder.Append("<serviceId>")
-                    .Append(SecurityElement.Escape(service.ServiceId ?? string.Empty))
+                    .Append(SecurityElement.Escape(service.ServiceId))
                     .Append("</serviceId>");
                 builder.Append("<SCPDURL>")
                     .Append(BuildUrl(service.ScpdUrl))
@@ -248,9 +233,9 @@ namespace Emby.Dlna.Server
                 return string.Empty;
             }
 
-            url = _serverAddress.TrimEnd('/') + "/dlna/" + _serverUdn + "/" + url.TrimStart('/');
+            url = "/dlna/" + _serverUdn + url;
 
-            return SecurityElement.Escape(url);
+            return DidlBuilder.EncodeUrl(url);
         }
 
         private IEnumerable<DeviceIcon> GetIcons()
@@ -262,7 +247,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 240,
                     Height = 240,
-                    Url = "icons/logo240.png"
+                    Url = "/icons/logo240.png"
                 },
 
                 new DeviceIcon
@@ -271,7 +256,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 240,
                     Height = 240,
-                    Url = "icons/logo240.jpg"
+                    Url = "/icons/logo240.jpg"
                 },
 
                 new DeviceIcon
@@ -280,7 +265,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 120,
                     Height = 120,
-                    Url = "icons/logo120.png"
+                    Url = "/icons/logo120.png"
                 },
 
                 new DeviceIcon
@@ -289,7 +274,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 120,
                     Height = 120,
-                    Url = "icons/logo120.jpg"
+                    Url = "/icons/logo120.jpg"
                 },
 
                 new DeviceIcon
@@ -298,7 +283,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 48,
                     Height = 48,
-                    Url = "icons/logo48.png"
+                    Url = "/icons/logo48.png"
                 },
 
                 new DeviceIcon
@@ -307,7 +292,7 @@ namespace Emby.Dlna.Server
                     Depth = "24",
                     Width = 48,
                     Height = 48,
-                    Url = "icons/logo48.jpg"
+                    Url = "/icons/logo48.jpg"
                 }
             };
 
@@ -319,18 +304,18 @@ namespace Emby.Dlna.Server
             {
                 ServiceType = "urn:schemas-upnp-org:service:ContentDirectory:1",
                 ServiceId = "urn:upnp-org:serviceId:ContentDirectory",
-                ScpdUrl = "contentdirectory/contentdirectory.xml",
-                ControlUrl = "contentdirectory/control",
-                EventSubUrl = "contentdirectory/events"
+                ScpdUrl = "/contentdirectory/contentdirectory.xml",
+                ControlUrl = "/contentdirectory/control",
+                EventSubUrl = "/contentdirectory/events"
             });
 
             list.Add(new DeviceService
             {
                 ServiceType = "urn:schemas-upnp-org:service:ConnectionManager:1",
                 ServiceId = "urn:upnp-org:serviceId:ConnectionManager",
-                ScpdUrl = "connectionmanager/connectionmanager.xml",
-                ControlUrl = "connectionmanager/control",
-                EventSubUrl = "connectionmanager/events"
+                ScpdUrl = "/connectionmanager/connectionmanager.xml",
+                ControlUrl = "/connectionmanager/control",
+                EventSubUrl = "/connectionmanager/events"
             });
 
             if (_profile.EnableMSMediaReceiverRegistrar)
@@ -339,9 +324,9 @@ namespace Emby.Dlna.Server
                 {
                     ServiceType = "urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:1",
                     ServiceId = "urn:microsoft.com:serviceId:X_MS_MediaReceiverRegistrar",
-                    ScpdUrl = "mediareceiverregistrar/mediareceiverregistrar.xml",
-                    ControlUrl = "mediareceiverregistrar/control",
-                    EventSubUrl = "mediareceiverregistrar/events"
+                    ScpdUrl = "/mediareceiverregistrar/mediareceiverregistrar.xml",
+                    ControlUrl = "/mediareceiverregistrar/control",
+                    EventSubUrl = "/mediareceiverregistrar/events"
                 });
             }
 

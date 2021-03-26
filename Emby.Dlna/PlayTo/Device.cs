@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Emby.Dlna.Common;
+using Emby.Dlna.Didl;
 using Emby.Dlna.Ssdp;
 using Microsoft.Extensions.Logging;
 
@@ -319,7 +320,7 @@ namespace Emby.Dlna.PlayTo
         {
             var avCommands = await GetAVProtocolAsync(cancellationToken).ConfigureAwait(false);
 
-            url = url.Replace("&", "&amp;", StringComparison.Ordinal);
+            // url = url.Replace("&", "&amp;", StringComparison.Ordinal);
 
             _logger.LogDebug("{0} - SetAvTransport Uri: {1} DlnaHeaders: {2}", Properties.Name, url, header);
 
@@ -331,8 +332,8 @@ namespace Emby.Dlna.PlayTo
 
             var dictionary = new Dictionary<string, string>
             {
-                { "CurrentURI", url },
-                { "CurrentURIMetaData", CreateDidlMeta(metaData) }
+                { "CurrentURI", DidlBuilder.EncodeUrl(url) },
+                { "CurrentURIMetaData", metaData }
             };
 
             var service = GetAvTransportService();
@@ -1183,7 +1184,7 @@ namespace Emby.Dlna.PlayTo
                 EventSubUrl = eventSubURL,
                 ScpdUrl = scpdUrl,
                 ServiceId = id,
-                ServiceType = type
+                ServiceType = type,
             };
         }
 
