@@ -362,7 +362,7 @@ namespace Emby.Dlna.PlayTo
 
                 if (error != null)
                 {
-                    _logger.LogError("Error {Code}:{Message} whilst transmitting {Data}", error, errorMsg, post);
+                    _logger.LogError("Error {Code}:{Message} whilst transmitting {Data:l}", error, errorMsg, post);
                     return;
                 }
             }

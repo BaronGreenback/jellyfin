@@ -643,19 +643,19 @@ namespace Emby.Dlna.Didl
                 switch (c)
                 {
                     case '<':
-                        sb.Append("%74");
+                        sb.Append("%3C");
                         break;
                     case '>':
-                        sb.Append("%76");
+                        sb.Append("%3E");
                         break;
                     case '"':
-                        sb.Append("%42");
+                        sb.Append("%22");
                         break;
                     case '\'':
-                        sb.Append("%47");
+                        sb.Append("%5C");
                         break;
                     case '&':
-                        sb.Append("%46");
+                        sb.Append("%26");
                         break;
                     default:
                         sb.Append(c);
