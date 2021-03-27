@@ -14,6 +14,8 @@ namespace Emby.Dlna.PlayTo
 
         public static XNamespace Ud { get; } = "urn:schemas-upnp-org:device-1-0";
 
+        public static XNamespace Ctrl { get; } = "urn:schemas-upnp-org:control-1-0";
+
         public static XNamespace UPnp { get; } = "urn:schemas-upnp-org:metadata-1-0/upnp/";
 
         public static XNamespace RenderingControl { get; } = "urn:schemas-upnp-org:service:RenderingControl:1";

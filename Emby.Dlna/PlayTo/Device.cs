@@ -344,7 +344,7 @@ namespace Emby.Dlna.PlayTo
             }
 
             var post = avCommands.BuildPost(command, service.ServiceType, url, dictionary);
-            await new SsdpHttpClient(_httpClientFactory)
+            var result = await new SsdpHttpClient(_httpClientFactory)
                 .SendCommandAsync(
                     Properties.BaseUrl,
                     service,
@@ -353,6 +353,19 @@ namespace Emby.Dlna.PlayTo
                     header: header,
                     cancellationToken: cancellationToken)
                 .ConfigureAwait(false);
+
+            // look for any error message and output it in the log.
+            if (result != null && result.Document != null)
+            {
+                var error = result.Document.Descendants(UPnpNamespaces.Ctrl + "errorCode").FirstOrDefault()?.Value;
+                var errorMsg = result.Document.Descendants(UPnpNamespaces.Ctrl + "errorDescription").FirstOrDefault()?.Value;
+
+                if (error != null)
+                {
+                    _logger.LogError("Error {Code}:{Message} whilst transmitting {Data}", error, errorMsg, post);
+                    return;
+                }
+            }
 
             await Task.Delay(50, cancellationToken).ConfigureAwait(false);
 

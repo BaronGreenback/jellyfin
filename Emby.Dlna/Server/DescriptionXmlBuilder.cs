@@ -99,45 +99,24 @@ namespace Emby.Dlna.Server
 
         private void AppendDeviceProperties(StringBuilder builder)
         {
-            builder.Append("<dlna:X_DLNACAP/>");
-
-            builder.Append("<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">DMS-1.50</dlna:X_DLNADOC>");
-            builder.Append("<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">M-DMS-1.50</dlna:X_DLNADOC>");
-
-            builder.Append("<deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>");
-
-            builder.Append("<friendlyName>")
-                .Append(SecurityElement.Escape(GetFriendlyName()))
-                .Append(@"</friendlyName><manufacturer>Jellyfin</manufacturer>
+            builder.Append("<dlna:X_DLNACAP/>")
+               .Append("<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">DMS-1.50</dlna:X_DLNADOC>")
+               .Append("<dlna:X_DLNADOC xmlns:dlna=\"urn:schemas-dlna-org:device-1-0\">M-DMS-1.50</dlna:X_DLNADOC>")
+               .Append("<deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>")
+               .Append("<friendlyName>")
+               .Append(SecurityElement.Escape(GetFriendlyName()))
+               .Append(@"</friendlyName><manufacturer>Jellyfin</manufacturer>
 <manufacturerURL>https://github.com/jellyfin/jellyfin</manufacturerURL>
 <modelDescription>UPnP/AV 1.0 Compliant Media Server</modelDescription>
 <modelName>Jellyfin Server</modelName>
 <modelURL>https://github.com/jellyfin/jellyfin</modelURL>
 <modelNumber>")
-                .Append(_appHost.ApplicationVersionString)
-                .Append("</modelNumber><serialNumber>");
-
-            if (string.IsNullOrEmpty(_profile.SerialNumber))
-            {
-                builder.Append(SecurityElement.Escape(_serverId));
-            }
-            else
-            {
-                builder.Append(SecurityElement.Escape(_profile.SerialNumber));
-            }
-
-            builder.Append("</serialNumber><UPC/>");
-
-            builder.Append("<UDN>uuid:")
-                .Append(SecurityElement.Escape(_serverUdn))
-                .Append("</UDN>");
-
-            if (!string.IsNullOrEmpty(_profile.SonyAggregationFlags))
-            {
-                builder.Append("<av:aggregationFlags xmlns:av=\"urn:schemas-sony-com:av\">")
-                    .Append(SecurityElement.Escape(_profile.SonyAggregationFlags))
-                    .Append("</av:aggregationFlags>");
-            }
+               .Append(_appHost.ApplicationVersionString)
+               .Append("</modelNumber><serialNumber>")
+               .Append(SecurityElement.Escape(_serverId))
+               .Append("</serialNumber><UPC/><UDN>uuid:")
+               .Append(SecurityElement.Escape(_serverId))
+               .Append("</UDN>");
         }
 
         private string GetFriendlyName()
