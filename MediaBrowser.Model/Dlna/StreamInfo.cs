@@ -664,7 +664,12 @@ namespace MediaBrowser.Model.Dlna
                     return string.Format(CultureInfo.InvariantCulture, "{0}/audio/{1}/master.m3u8?{2}", baseUrl, ItemId, queryString);
                 }
 
-                return string.Format(CultureInfo.InvariantCulture, "{0}/audio/{1}/stream{2}?{3}", baseUrl, ItemId, extension, queryString);
+                if (!string.IsNullOrEmpty(Container))
+                {
+                    queryString += "&originalExtension=." + Container;
+                }
+
+                return string.Format(CultureInfo.InvariantCulture, "{0}/audio/{1}/stream.ts?{3}", baseUrl, ItemId, extension, queryString);
             }
 
             if (string.Equals(SubProtocol, "hls", StringComparison.OrdinalIgnoreCase))
@@ -672,7 +677,12 @@ namespace MediaBrowser.Model.Dlna
                 return string.Format(CultureInfo.InvariantCulture, "{0}/videos/{1}/master.m3u8?{2}", baseUrl, ItemId, queryString);
             }
 
-            return string.Format(CultureInfo.InvariantCulture, "{0}/videos/{1}/stream{2}?{3}", baseUrl, ItemId, extension, queryString);
+            if (!string.IsNullOrEmpty(Container))
+            {
+                queryString += "&originalExtension=." + Container;
+            }
+
+            return string.Format(CultureInfo.InvariantCulture, "{0}/videos/{1}/stream.ts?{3}", baseUrl, ItemId, extension, queryString);
         }
 
         private static List<NameValuePair> BuildParams(StreamInfo item, string accessToken)
