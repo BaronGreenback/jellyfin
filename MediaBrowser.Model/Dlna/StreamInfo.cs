@@ -653,8 +653,6 @@ namespace MediaBrowser.Model.Dlna
                 throw new ArgumentNullException(nameof(baseUrl));
             }
 
-            string extension = string.IsNullOrEmpty(Container) ? string.Empty : "." + Container;
-
             baseUrl = baseUrl.TrimEnd('/');
 
             if (MediaType == DlnaProfileType.Audio)
@@ -666,10 +664,10 @@ namespace MediaBrowser.Model.Dlna
 
                 if (!string.IsNullOrEmpty(Container))
                 {
-                    queryString += "&originalExtension=." + Container;
+                    queryString += "&ext=." + Container;
                 }
 
-                return string.Format(CultureInfo.InvariantCulture, "{0}/audio/{1}/stream.ts?{3}", baseUrl, ItemId, extension, queryString);
+                return string.Format(CultureInfo.InvariantCulture, "{0}/audio/{1}/stream.ts?{3}", baseUrl, ItemId, queryString);
             }
 
             if (string.Equals(SubProtocol, "hls", StringComparison.OrdinalIgnoreCase))
@@ -679,10 +677,10 @@ namespace MediaBrowser.Model.Dlna
 
             if (!string.IsNullOrEmpty(Container))
             {
-                queryString += "&originalExtension=." + Container;
+                queryString += "&ext=." + Container;
             }
 
-            return string.Format(CultureInfo.InvariantCulture, "{0}/videos/{1}/stream.ts?{3}", baseUrl, ItemId, extension, queryString);
+            return string.Format(CultureInfo.InvariantCulture, "{0}/videos/{1}/stream.ts?{3}", baseUrl, ItemId, queryString);
         }
 
         private static List<NameValuePair> BuildParams(StreamInfo item, string accessToken)
